@@ -4,10 +4,13 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "GADGET2"
-version = "0.0.1"
+version = "0.0.2"
 description = "Processing, Analysis, and Simulation for the GADGET2 TPC at FRIB"
 authors = [
     { name = "Adam", email = "jaros@frib.msu.edu" }
 ]
-license = {}
-dependencies = []
+dependencies = [
+"matplotlib",
+"numpy",
+"scipy"
+]
