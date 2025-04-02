@@ -1,3 +1,7 @@
+"""
+This module contains functions for creating histograms, fitting Gaussian curves, and displaying Energy spectra.
+"""
+
 import matplotlib.pyplot as plt
 import numpy as np
 import scipy.optimize as opt
@@ -45,7 +49,6 @@ def plot_1d_hist(dataset,
         for vline in vlines:
             plt.axvline(vline, color='red', linestyle='dashed', linewidth=2)
 
-
 def show_cut(dataset,
                  vlines:list[float, float],
                  fig_name:str="Energy Spectrum",
@@ -68,7 +71,6 @@ def show_cut(dataset,
     plt.show()
     return len(trimmed_hist)
 
-
 def plot_spectrum(dataset,
                  fig_name:str="Energy Spectrum",
                  units:str="Integrated Charge (adc counts)",
@@ -80,7 +82,6 @@ def plot_spectrum(dataset,
     '''
     plot_1d_hist(dataset, fig_name, units, num_bins, vlines)
     plt.show()
-
 
 def quick_fit_gaussian(dataset,
                  units:str="Integrated Charge (adc counts)",
