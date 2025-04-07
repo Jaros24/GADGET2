@@ -2,8 +2,11 @@
 This module provides functions to convert ADC counts to MeV and vice versa
 """
 # TODO: store calibration points alongside the run files. See github issue #1
+# Q: is the detector response always linear or should it be generalized?
 
-def to_MeV(counts:float, calib_point_1:tuple[float, float]=(0.806, 156745), calib_point_2:tuple[float,float]=(1.679, 320842))->float:
+import numpy as np
+
+def to_MeV(counts, calib_point_1:tuple[float, float]=(0.806, 156745), calib_point_2:tuple[float,float]=(1.679, 320842)):
     """
     Converts ADC counts to MeV using the energy calibration points.
     
@@ -11,6 +14,9 @@ def to_MeV(counts:float, calib_point_1:tuple[float, float]=(0.806, 156745), cali
     
     Returns the energy in MeV.
     """
+    
+    if np.any(counts < 0):
+        raise ValueError("ADC counts must be non-negative")
     
     energy_1, channel_1 = calib_point_1
     energy_2, channel_2 = calib_point_2
@@ -21,7 +27,7 @@ def to_MeV(counts:float, calib_point_1:tuple[float, float]=(0.806, 156745), cali
     return counts*energy_scale_factor + energy_offset
 
 
-def to_counts(MeV:float, calib_point_1:tuple[float, float]=(0.806, 156745), calib_point_2:tuple[float,float]=(1.679, 320842))->float:
+def to_counts(MeV, calib_point_1:tuple[float, float]=(0.806, 156745), calib_point_2:tuple[float,float]=(1.679, 320842)):
     """
     Converts MeV to ADC counts using the energy calibration points.
     
@@ -29,6 +35,9 @@ def to_counts(MeV:float, calib_point_1:tuple[float, float]=(0.806, 156745), cali
     
     Returns the ADC counts.
     """
+    if np.any(MeV < 0):
+        raise ValueError("Energy in MeV must be non-negative")
+    
     energy_1, channel_1 = calib_point_1
     energy_2, channel_2 = calib_point_2
     

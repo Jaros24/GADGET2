@@ -1,41 +1,58 @@
-from .RunH5 import run_num_to_str, get_default_path
+"""
+This script generates the files needed for the GADGET GUI from the h5 files.
+"""
+
 import os, sys
 import h5py
 import numpy as np
 import math
 import tqdm
-import BaselineRemoval
+from BaselineRemoval import BaselineRemoval
 import pandas as pd
 from sklearn.cluster import DBSCAN
 from sklearn.decomposition import PCA
-from skspatial import Line
-from .Images import remove_noise, smooth_trace
+import skspatial.objects
+from .ImagesCNN import remove_noise, smooth_trace
+from .RunH5 import run_num_to_str, get_default_path
+import time
 
 
-def generate_files(run_num, length, ic, pads, eps, samps, poly):
+
+def generate_files(run_num, length=80, ic=800000, pads=21, eps=7, samps=8, poly=2, overwrite=False, verbose=False):
+    
+    def vprint(msg, verbose=verbose):
+        """
+        Print message if verbose is True
+        """
+        if verbose:
+            print(msg)
+            time.sleep(0.1)
+            
     run_num = run_num_to_str(run_num)
+    vprint(f"run_num: {run_num}")
     #check if files already exist
     mypath = get_default_path(run_num)
     sub_mypath = mypath + f'/len{length}_ic{ic}_pads{pads}_eps{eps}_samps{samps}_poly{poly}'
+    vprint(f"mypath: {mypath}")
     if os.path.isdir(mypath):
         if os.path.isdir(sub_mypath):
             # Give option to overwrite or cancel
-            print("Files Already Exist.")
-            overwrite = int(input('Would you like to overwrite (1=yes, 0=no): '))    
-            if overwrite == True:
-                print('Overwriting Existing Files')
-            else:
-                return
-            
+            if overwrite == False:
+                print("Files Already Exist.")
+                overwrite = int(input('Would you like to overwrite (1=yes, 0=no): '))    
+                if overwrite == True:
+                    print('Overwriting Existing Files')
+                else:
+                    return
         else:
             os.makedirs(sub_mypath)
         
     else:
         os.makedirs(mypath)
         os.makedirs(sub_mypath)
-
-    #start coppied from generate_files in The_GADGET_FUI.py
-    # In[2]:
+    
+    vprint(f"sub_mypath: {sub_mypath}")
+    
     class HiddenPrints:
         def __enter__(self):
             self._original_stdout = sys.stdout
@@ -44,8 +61,6 @@ def generate_files(run_num, length, ic, pads, eps, samps, poly):
         def __exit__(self, exc_type, exc_val, exc_tb):
             sys.stdout.close()
             sys.stdout = self._original_stdout
-
-
 
     def remove_outliers(xset, yset, zset, eset, pads):
         """
@@ -100,17 +115,17 @@ def generate_files(run_num, length, ic, pads, eps, samps, poly):
                yset[:, np.newaxis], 
                zset[:, np.newaxis]), 
                axis=1)
-
+        
         # Use PCA to find track length
         pca = PCA(n_components=2)
         principalComponents = pca.fit(data)
         principalComponents = pca.transform(data)
-        principalDf = pd.DataFrame(data = principalComponents
-         , columns = ['principal component 1', 'principal component 2'])
-        calibration_factor = 1.4 
+        principalDf = pd.DataFrame(data = principalComponents,
+                                   columns = ['principal component 1', 'principal component 2'])
+        calibration_factor = 1.4
 
         # Call track_angle to get the angle of the track
-        angle_deg = track_angle(xset, yset, zset)
+        angle_deg = 0# track_angle(xset, yset, zset)
 
         # Calculate the scale factor based on the angle
         #scale_factor = get_scale_factor(angle_deg)
@@ -119,6 +134,7 @@ def generate_files(run_num, length, ic, pads, eps, samps, poly):
         # Apply the scale factor to the track length
         # track_len = scale_factor * calibration_factor * 2.35 * principalDf.std()[0]
         track_len = calibration_factor * 2.35 * principalDf.std()[0]
+        vprint(f"track_len: {track_len}")
 
         if track_len > length:
             veto_on_length = True
@@ -136,9 +152,13 @@ def generate_files(run_num, length, ic, pads, eps, samps, poly):
                    yset[:, np.newaxis], 
                    zset[:, np.newaxis]), 
                    axis=1)
+        vprint(f"data shape: {data.shape}")
+        vprint(f"data: {data}")
 
         # Fit regression line
-        line_fit = Line.best_fit(data)
+        # TODO: THIS LINE FITTING IS NOT WORKING
+        line_fit = skspatial.objects.Line.best_fit(data)
+        vprint(f"line_fit: {line_fit}")
 
         # Find angle between the vector of the fit line and a vector normal to the xy-plane (pad plane)
         v = np.array([line_fit.vector]).T   # fit line vector
@@ -151,6 +171,7 @@ def generate_files(run_num, length, ic, pads, eps, samps, poly):
         theta = math.acos(dot)
         track_angle_rad = (math.pi/2 - theta) 
         track_angle_deg = track_angle_rad * (180 / np.pi)
+        vprint(f"track_angle_rad: {track_angle_rad}")
 
         # Angle should always be less than 90 deg
         if track_angle_deg < 0:
@@ -178,7 +199,8 @@ def generate_files(run_num, length, ic, pads, eps, samps, poly):
         - Sums mesh signal to return energy.
         """
         # Converts h5 files into ndarrays, and output each event dataset as a separte list
-        num_events = int(len(np.array(h5file['clouds'])))
+        num_events = int(h5file['meta/meta'][2])
+        vprint(f"num_events: {num_events}")
 
         len_list = []
         good_events = []
@@ -193,24 +215,26 @@ def generate_files(run_num, length, ic, pads, eps, samps, poly):
         cloud_missing = 0
         skipped_events = 0
         veto_events = 0
-
+        
         # Veto in "junk" region of plot (low energy, high range)
         # Define veto region
-        y = np.array([20, 40, 60])
-        x = np.array([100000, 150000, 200000])
-        slope, intercept = np.polyfit(x, y, deg=1)
+        #y = np.array([20, 40, 60])
+        #x = np.array([100000, 150000, 200000])
+        #slope, intercept = np.polyfit(x, y, deg=1)
 
-        pbar = tqdm(total=num_events+1)
-        for i in range(1, num_events+1):
-
+        for i in tqdm.trange(1, num_events+1):
             # Make copy of cloud datasets
             str_cloud = f"evt{i}_cloud"
+            vprint(f"str_cloud: {str_cloud}")
             try:
-                cloud = np.array(h5file['clouds'][str_cloud])
+                cloud = h5file[f'clouds/{str_cloud}']
+                cloud = np.array(cloud)
+                vprint(f"cloud shape: {cloud.shape}")
             except:
+                vprint(f"cloud not found for event {i}")
                 cloud_missing += 1
-                pbar.update(n=1)
                 continue
+            
 
             # Make copy of datasets
             cloud_x = cloud[:,0]
@@ -219,15 +243,20 @@ def generate_files(run_num, length, ic, pads, eps, samps, poly):
             #cloud_z = cloud[:,2] - np.min(cloud[:, 2])
             cloud_e = cloud[:,3]
             del cloud
-
+            vprint(f"cloud x: {cloud_x.shape}")
+            vprint(f"cloud y: {cloud_y.shape}")
+            vprint(f"cloud z: {cloud_z.shape}")
+            vprint(f"cloud e: {cloud_e.shape}")
+            
             # Apply veto condition
             R = 36                           # Radius of the pad plane
             r = np.sqrt(cloud_x**2 + cloud_y**2)
             statements = np.greater(r, R)    # Check if any point lies outside of R
+            vprint(f"max r: {np.max(r)}")
 
             if np.any(statements) == True:
                 veto_events += 1
-                pbar.update(n=1)
+                vprint(f"skipped event {i} because of veto condition")
                 continue
             
             # Apply pad threshold
@@ -236,10 +265,11 @@ def generate_files(run_num, length, ic, pads, eps, samps, poly):
             xy_tuples = np.column_stack((x, y))
             unique_xy_tuples = set(map(tuple, xy_tuples))
             num_unique_tuples = len(unique_xy_tuples)
+            vprint(f"num_unique_tuples: {num_unique_tuples}")
 
             if num_unique_tuples <= pads:
                 skipped_events += 1
-                pbar.update(n=1)
+                vprint(f"skipped event {i} because of pad threshold")
                 continue
 
             """
@@ -247,19 +277,23 @@ def generate_files(run_num, length, ic, pads, eps, samps, poly):
             cloud_x, cloud_y, cloud_z, cloud_e, veto = remove_outliers(cloud_x, cloud_y, cloud_z, cloud_e, pads)
             if veto == True:
                 skipped_events += 1
-                pbar.update(n=1)
+                vprint(f"skipped event {i} because of outliers")
                 continue
             """
             # Move track next to pad plane for 3D view and scale by appropriate factor
             zscale = 1.45 # Have also used 1.92
-            cloud_z = (cloud_z  - np.min(cloud_z ))*zscale 
+            cloud_z = (cloud_z  - np.min(cloud_z))*zscale
+            vprint(f"cloud_z rescaled: {cloud_z.shape}")
             #cloud_z = (cloud_z  - np.min(cloud_z ))
 
             # Call track_len() to create lists of all track lengths
             length, veto_on_length, angle = track_len(cloud_x, cloud_y, cloud_z)
+            vprint(f"length: {length}")
+            vprint(f"veto_on_length: {veto_on_length}")
+            vprint(f"angle: {angle}")
             if veto_on_length == True:
                 veto_events += 1
-                pbar.update(n=1)
+                vprint(f"skipped event {i} because of length threshold")
                 continue 
 
             str_trace = f"evt{i}_data"
@@ -278,25 +312,26 @@ def generate_files(run_num, length, ic, pads, eps, samps, poly):
             if upper_bound > 512:
                 upper_bound = 506
             trace = trace[low_bound:upper_bound]
-
+            
+            '''
             # Smooth trace
             trace = smooth_trace(trace)
 
             # Subtract background and fit trace
-            polynomial_degree=poly 
+            polynomial_degree=poly
             baseObj=BaselineRemoval(trace)
             trace=baseObj.IModPoly(polynomial_degree)
 
             # Remove noise, negative values, and zero consecutive bins
             trace = remove_noise(trace, threshold_ratio=0.01)
-    
+            '''
 
             # Here you can apply the scale factor to the total energy
             scaled_energy = np.sum(trace)
 
             if scaled_energy > ic:
                 veto_events += 1
-                pbar.update(n=1)
+                vprint(f"skipped event {i} because of energy threshold")
                 continue
 
             """
@@ -306,7 +341,6 @@ def generate_files(run_num, length, ic, pads, eps, samps, poly):
             y_line = slope * x1 + intercept
             if y1 > y_line and y1 > 20:
                 veto_events += 1
-                pbar.update(n=1)
                 continue
             """
 
@@ -324,7 +358,6 @@ def generate_files(run_num, length, ic, pads, eps, samps, poly):
 
             # Track original event number of good events
             good_events.append(i)
-            pbar.update(n=1)
 
         print('Starting # of Events:', num_events)
         print('Events Below Threshold:', skipped_events)
@@ -334,47 +367,46 @@ def generate_files(run_num, length, ic, pads, eps, samps, poly):
 
         return (tot_energy, skipped_events, veto_events, good_events, len_list, trace_list, xHit_list, yHit_list, zHit_list, eHit_list, angle_list)
 
-    
-
-    #str_file = f"/mnt/rawdata/e21072/h5/run_{run_num}.h5"
-    str_file = f"/mnt/analysis/e21072/h5test/run_{run_num}.h5"
+    str_file = f"{get_default_path(run_num)}.h5"
     f = h5py.File(str_file, 'r')
+    vprint(f"opened file {str_file}")
     (tot_energy, skipped_events, veto_events, good_events, len_list, trace_list, xHit_list, yHit_list, zHit_list, eHit_list, angle_list) = main(h5file=f, pads=pads, ic=ic)
 
     # Save Arrays
-    print(f"DIRECTORY: /mnt/analysis/e21072/h5test/run_{run_num}/len{length}_ic{ic}_pads{pads}_eps{eps}_samps{samps}_poly{poly}")
-    sub_path = f"/mnt/analysis/e21072/h5test/run_{run_num}/len{length}_ic{ic}_pads{pads}_eps{eps}_samps{samps}_poly{poly}/tot_energy"
-    np.save(sub_path, tot_energy, allow_pickle=True)
-
-    sub_path = f"/mnt/analysis/e21072/h5test/run_{run_num}/len{length}_ic{ic}_pads{pads}_eps{eps}_samps{samps}_poly{poly}/skipped_events"
-    np.save(sub_path, skipped_events, allow_pickle=True)
-
-    sub_path = f"/mnt/analysis/e21072/h5test/run_{run_num}/len{length}_ic{ic}_pads{pads}_eps{eps}_samps{samps}_poly{poly}/veto_events"
-    np.save(sub_path, veto_events, allow_pickle=True)
-
-    sub_path = f"/mnt/analysis/e21072/h5test/run_{run_num}/len{length}_ic{ic}_pads{pads}_eps{eps}_samps{samps}_poly{poly}/good_events"
-    np.save(sub_path, good_events, allow_pickle=True)
-
-    sub_path = f"/mnt/analysis/e21072/h5test/run_{run_num}/len{length}_ic{ic}_pads{pads}_eps{eps}_samps{samps}_poly{poly}/len_list"
-    np.save(sub_path, len_list, allow_pickle=True)
-
-    sub_path = f"/mnt/analysis/e21072/h5test/run_{run_num}/len{length}_ic{ic}_pads{pads}_eps{eps}_samps{samps}_poly{poly}/trace_list"
-    np.save(sub_path, trace_list, allow_pickle=True)
-
-    sub_path = f"/mnt/analysis/e21072/h5test/run_{run_num}/len{length}_ic{ic}_pads{pads}_eps{eps}_samps{samps}_poly{poly}/xHit_list"
-    np.save(sub_path, xHit_list, allow_pickle=True)
-
-    sub_path = f"/mnt/analysis/e21072/h5test/run_{run_num}/len{length}_ic{ic}_pads{pads}_eps{eps}_samps{samps}_poly{poly}/yHit_list"
-    np.save(sub_path, yHit_list, allow_pickle=True)
-
-    sub_path = f"/mnt/analysis/e21072/h5test/run_{run_num}/len{length}_ic{ic}_pads{pads}_eps{eps}_samps{samps}_poly{poly}/zHit_list"
-    np.save(sub_path, zHit_list, allow_pickle=True)
-
-    sub_path = f"/mnt/analysis/e21072/h5test/run_{run_num}/len{length}_ic{ic}_pads{pads}_eps{eps}_samps{samps}_poly{poly}/eHit_list"
-    np.save(sub_path, eHit_list, allow_pickle=True)
-
-    sub_path = f"/mnt/analysis/e21072/h5test/run_{run_num}/len{length}_ic{ic}_pads{pads}_eps{eps}_samps{samps}_poly{poly}/angle_list"
-    np.save(sub_path, angle_list, allow_pickle=True)
+    if len(good_events) == 0:
+        print(f"No good events in run {run_num} found with parameters, not saving files.")
+        print(f"len{length}_ic{ic}_pads{pads}_eps{eps}_samps{samps}_poly{poly}")
+        # remove directory
+        try: os.rmdir(sub_mypath)
+        except OSError: pass
+        return
+    
+    tot_energy = np.array(tot_energy)
+    skipped_events = np.array(skipped_events)
+    veto_events = np.array(veto_events)
+    good_events = np.array(good_events)
+    len_list = np.array(len_list)
+    trace_list = np.array(trace_list, dtype=object)
+    xHit_list = np.array(xHit_list, dtype=object)
+    yHit_list = np.array(yHit_list, dtype=object)
+    zHit_list = np.array(zHit_list, dtype=object)
+    eHit_list = np.array(eHit_list, dtype=object)
+    angle_list = np.array(angle_list, dtype=object)
+    
+    
+    sub_path = f"{get_default_path(run_num)}/len{length}_ic{ic}_pads{pads}_eps{eps}_samps{samps}_poly{poly}/"
+    print(f"DIRECTORY: {sub_path}")
+    np.save(f"{sub_path}tot_energy", tot_energy, allow_pickle=True)
+    np.save(f"{sub_path}skipped_events", skipped_events, allow_pickle=True)
+    np.save(f"{sub_path}veto_events", veto_events, allow_pickle=True)
+    np.save(f"{sub_path}good_events", good_events, allow_pickle=True)
+    np.save(f"{sub_path}len_list", len_list, allow_pickle=True)
+    np.save(f"{sub_path}trace_list", trace_list, allow_pickle=True)
+    np.save(f"{sub_path}xHit_list", xHit_list, allow_pickle=True)
+    np.save(f"{sub_path}yHit_list", yHit_list, allow_pickle=True)
+    np.save(f"{sub_path}zHit_list", zHit_list, allow_pickle=True)
+    np.save(f"{sub_path}eHit_list", eHit_list, allow_pickle=True)
+    np.save(f"{sub_path}angle_list", angle_list, allow_pickle=True)
 
     #Delete arrays
     del tot_energy
@@ -388,3 +420,6 @@ def generate_files(run_num, length, ic, pads, eps, samps, poly):
     del zHit_list
     del eHit_list
     del angle_list
+
+#if __name__ == "__main__":
+#    generate_files(139)

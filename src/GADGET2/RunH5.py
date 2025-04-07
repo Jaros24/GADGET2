@@ -2,6 +2,7 @@ import socket
 import numpy as np
 import os
 from .EnergyCalibration import to_MeV
+from .RawH5 import raw_h5_file
 import matplotlib.path
 
 
@@ -9,11 +10,19 @@ def run_num_to_str(run_num):
     run_num = int(run_num)
     return  ('%4d'%run_num).replace(' ', '0')
 
-def get_h5_path():
-    if socket.gethostname() == 'tpcgpu':
-        return "/egr/research-tpc/shared/Run_Data/"
+def get_h5_path(path=None):
+    if path is None:
+        machine = socket.gethostname()
+        if machine == 'tpcgpu':
+            return "/egr/research-tpc/shared/Run_Data/"
+        elif machine == 'fishtank': # potentially change to steelhead etc
+            return "/mnt/analysis/e21072/h5test/"
+        elif machine == 'warbler':
+            return "/home/adam/GADGET2/data/"
+        else:
+            raise ValueError(f"Unknown machine: {machine}")
     else:
-        return "/mnt/analysis/e21072/h5test/"
+        return path
 
 def get_default_path(run_id):    
     run_str = run_num_to_str(run_id)
@@ -38,9 +47,9 @@ class GadgetRunH5:
         self.trace_list = np.load(os.path.join(folder_path, 'trace_list.npy'), allow_pickle=True)
         #
         self.angle_list = np.load(os.path.join(folder_path, 'angle_list.npy'), allow_pickle=True)
-        self.file_path = get_h5_path() + ('run_%04d.h5'%run_num)
+        self.file_path = get_h5_path() + (f'run_{run_num_to_str(run_num)}.h5')
     
-        self.h5_file = raw_h5_file(self.file_path, flat_lookup_csv='./raw_viewer/channel_mappings/flatlookup4cobos.csv')
+        self.h5_file = raw_h5_file(self.file_path, flat_lookup_csv=f'{__file__[:-8]}/data/flatlookup4cobos.csv')
         self.h5_file.background_subtract_mode='fixed window'
         self.h5_file.data_select_mode='near peak'
         self.h5_file.remove_outliers=True

@@ -6,6 +6,7 @@ from scipy.signal import savgol_filter
 from .EnergyCalibration import to_MeV
 import math
 import os
+import random
 
 def make_grid() -> np.ndarray:
     """
@@ -135,7 +136,7 @@ def trace_image(padplane_image, trace):
     ax.spines['left'].set_visible(False)
     ax.fill_between(x, trace, color='b', alpha=1)
     rand_num = random.randrange(0,1000000,1)
-    temp_strg = f'/mnt/projects/e21072/OfflineAnalysis/analysis_scripts/energy_depo_{rand_num}.jpg'
+    temp_strg = f'{__file__[:-12]}tmp/energy_depo_{rand_num}.jpg' #TODO: GITHUB ISSUE #2
     plt.savefig(temp_strg, dpi=my_dpi)
     plt.close()
     # Load png plot as a matrix so that it can be appended to pad plane plot
@@ -340,7 +341,7 @@ def make_image(self, index, use_raw_data = False ,save_path=None, show=False, sm
     else:
         plt.close()
 
-def plot_track(cut_indices):
+def plot_track(cut_indices, use_raw_data = False):
     all_image_data = []  # List to store the results
     pbar = tqdm(total=len(cut_indices))
     # xHit_list = np.load(os.path.join(sub_mymainpath, 'xHit_list.npy'), allow_pickle=True)
@@ -388,10 +389,10 @@ def plot_track(cut_indices):
     # del eHit_list
     return all_image_data  # Return the list of all results after the loop
 
-def save_cutImages(self, cut_indices, use_raw_data = False):
+def save_cutImages(run_file_location, cut_indices, use_raw_data = False):
     # Precompute the grid once and reuse it
     global_grid = make_grid()
     
-    result = plot_track(cut_indices)
+    result = plot_track(cut_indices, use_raw_data)
     return result
 
