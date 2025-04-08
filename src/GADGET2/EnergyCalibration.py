@@ -6,7 +6,7 @@ This module provides functions to convert ADC counts to MeV and vice versa
 
 import numpy as np
 
-def to_MeV(counts, calib_point_1:tuple[float, float]=(0.806, 156745), calib_point_2:tuple[float,float]=(1.679, 320842)):
+def to_MeV(counts, calib_point_1:tuple=(0.806, 156745), calib_point_2:tuple=(1.679, 320842)):
     """
     Converts ADC counts to MeV using the energy calibration points.
     
@@ -27,7 +27,7 @@ def to_MeV(counts, calib_point_1:tuple[float, float]=(0.806, 156745), calib_poin
     return counts*energy_scale_factor + energy_offset
 
 
-def to_counts(MeV, calib_point_1:tuple[float, float]=(0.806, 156745), calib_point_2:tuple[float,float]=(1.679, 320842)):
+def to_counts(MeV, calib_point_1:tuple=(0.806, 156745), calib_point_2:tuple=(1.679, 320842)):
     """
     Converts MeV to ADC counts using the energy calibration points.
     

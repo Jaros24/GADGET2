@@ -12,7 +12,7 @@ def plot_1d_hist(dataset,
                  fig_name:str="Energy Spectrum",
                  units:str="Integrated Charge (adc counts)",
                  num_bins:int=20,
-                 vlines:list[float]=None):
+                 vlines:list=None):
     '''
     Shows a 1d histogram of the dataset.
     
@@ -50,7 +50,7 @@ def plot_1d_hist(dataset,
             plt.axvline(vline, color='red', linestyle='dashed', linewidth=2)
 
 def show_cut(dataset,
-                 vlines:list[float, float],
+                 vlines:list,
                  fig_name:str="Energy Spectrum",
                  units:str="Integrated Charge (adc counts)",
                  num_bins:int=20) -> int:
@@ -75,7 +75,7 @@ def plot_spectrum(dataset,
                  fig_name:str="Energy Spectrum",
                  units:str="Integrated Charge (adc counts)",
                  num_bins:int=20,
-                 vlines:list[float]=None):
+                 vlines:list=None):
     '''
     Displays a 1D histogram of the dataset.
     Wrapper for the plot_1d_hist function.
@@ -86,7 +86,7 @@ def plot_spectrum(dataset,
 def quick_fit_gaussian(dataset,
                  units:str="Integrated Charge (adc counts)",
                  num_bins:int=20,
-                 vlines:list[float]=None):
+                 vlines:list=None):
     '''
     Fits a Gaussian to the histogram of the dataset.
     Displays the histogram with the fit and the residuals.

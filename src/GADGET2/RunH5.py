@@ -15,7 +15,7 @@ def get_h5_path(path=None):
         machine = socket.gethostname()
         if machine == 'tpcgpu':
             return "/egr/research-tpc/shared/Run_Data/"
-        elif machine == 'fishtank': # potentially change to steelhead etc
+        elif machine in ['pike', 'steelhead', 'flagtail']:
             return "/mnt/analysis/e21072/h5test/"
         elif machine == 'warbler':
             return "/home/adam/GADGET2/data/"
