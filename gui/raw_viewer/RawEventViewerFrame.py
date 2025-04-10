@@ -18,7 +18,7 @@ from skspatial.objects import Line, Point
 from tqdm import tqdm
 
 from fit_gui.HistogramFitFrame import HistogramFitFrame
-from GADGET2 import RawH5
+from GADGET2 import raw_h5
 from raw_viewer import heritage_h5_file
 
 class RawEventViewerFrame(ttk.Frame):
@@ -30,7 +30,7 @@ class RawEventViewerFrame(ttk.Frame):
                 file_path = tk.filedialog.askopenfilename(initialdir='/mnt/analysis/e21072/', title='Select H5 File', filetypes=[('H5', ".h5")])
             if flat_lookup_path == None:
                 flat_lookup_path = tk.filedialog.askopenfilename(initialdir='./raw_viewer/channel_mappings', title='Select Channel Mapping FIle', filetypes=[('CSV', ".csv")])
-            self.data = RawH5.raw_h5_file(file_path, flat_lookup_csv=flat_lookup_path, zscale=1.45)
+            self.data = raw_h5.raw_h5_file(file_path, flat_lookup_csv=flat_lookup_path, zscale=1.45)
         else:
             if file_path == None:
                 file_path = tk.filedialog.askopenfilename(initialdir='.', title='Select H5 File', filetypes=[('H5', ".h5")])

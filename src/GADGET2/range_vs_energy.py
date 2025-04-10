@@ -2,10 +2,10 @@ import matplotlib.path
 
 
 def get_RvE_cut_indexes(self, points):
-    '''
+    """
     points: list of (energy, range) tuples defining a cut in RvE
     Energy is in MeV, range in mm
-    '''
+    """
     path = matplotlib.path.Path(points)
     to_return = []
     index = 0

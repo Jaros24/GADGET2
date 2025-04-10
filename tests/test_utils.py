@@ -1,6 +1,6 @@
 import unittest
 import numpy as np
-from GADGET2.CurveFit import gaussian
+from GADGET2.utils import gaussian, vprint
 
 class TestGaussianFunction(unittest.TestCase):
     def test_gaussian_peak(self):
@@ -41,6 +41,16 @@ class TestGaussianFunction(unittest.TestCase):
         result1 = gaussian(x, amplitude, mu, sigma)
         result2 = gaussian(x, amplitude, mu, abs(sigma))
         self.assertAlmostEqual(result1, result2, places=6)
+
+class TestVPrint(unittest.TestCase):
+    def test_verbose(self):
+        verbose = False
+        message = 'Testing'
+        
+        self.assertNoLogs(vprint(message, verbose))
+        
+        verbose = True
+        self.assertLogs(vprint(message, verbose))
 
 if __name__ == '__main__':
     unittest.main()

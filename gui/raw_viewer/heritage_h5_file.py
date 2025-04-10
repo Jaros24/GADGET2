@@ -5,12 +5,12 @@ stored in /mnt/analysis/e17023/alphadata_h5/
 import os
 import numpy as np
 from numpy.core import inf
-import GADGET2.RawH5 as RawH5
+import GADGET2.raw_h5 as raw_h5
 
-class heritage_h5_file(RawH5.raw_h5_file):
+class heritage_h5_file(raw_h5.raw_h5_file):
     def __init__(self, file_path):
         flat_lookup_path = os.path.join(os.path.dirname(__file__), 'channel_mappings/flatlookup2cobos.csv')
-        RawH5.raw_h5_file.__init__(self,file_path, flat_lookup_csv=flat_lookup_path)
+        raw_h5.raw_h5_file.__init__(self,file_path, flat_lookup_csv=flat_lookup_path)
         
         
     

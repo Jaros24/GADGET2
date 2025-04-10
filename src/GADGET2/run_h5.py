@@ -1,8 +1,8 @@
 import socket
 import numpy as np
 import os
-from .EnergyCalibration import to_MeV
-from .RawH5 import raw_h5_file
+from .energy_calibration import to_MeV
+from .raw_h5 import raw_h5_file
 import matplotlib.path
 
 
@@ -69,25 +69,25 @@ class GadgetRunH5:
         self.eHit_list = np.load(os.path.join(self.folder_path, 'eHit_list.npy'), allow_pickle=True)
 
     def get_index(self, event_num):
-        '''
+        """
         Gets the index at which an event number can be found in the data
-        '''
+        """
         return np.where(self.good_events == event_num)[0][0]
 
     def get_hit_lists(self, event_num):
-        '''
+        """
         I think these are x,y,z positions of points in the point cloud, and 
         the energy associated with each point.
-        '''
+        """
         index = self.get_index(event_num)
         return self.xHit_list[index], self.yHit_list[index], \
             self.zHit_list[index], self.eHit_list[index]
 
     def get_RvE_cut_indexes(self, points):
-        '''
+        """
         points: list of (energy, range) tuples defining a cut in RvE
         Energy is in MeV, range in mm
-        '''
+        """
         path = matplotlib.path.Path(points)
         to_return = []
         index = 0

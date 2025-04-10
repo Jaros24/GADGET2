@@ -85,14 +85,14 @@ def remove_outliers(xset, yset, zset, eset, pads):
 	return xset, yset, zset, eset, pads, skip 
 
 def get_first_last_event_num(PATH):
-	'''
+	"""
 	Inputs:
 		PATH            : Path to a specific HDF5 file.
 	
 	Returns:
 		first_event_num : An integer that specifies the first event number in the HDF5 file.
 		last_event_num  : An integer that specifies the last event number in the HDF5 file.
-	'''
+	"""
 	f = h5py.File(PATH, 'r')
 	
 	meta = f['/meta'].get('meta')
@@ -104,7 +104,7 @@ def get_first_last_event_num(PATH):
 	return first_event_num, last_event_num
 
 def load_trace(PATH, event_num = 0):
-	'''
+	"""
 	Inputs:
 		PATH      : Path to a specified HDF5 file.
 		event_num : The event number that you want to look at.
@@ -112,7 +112,7 @@ def load_trace(PATH, event_num = 0):
 	Returns:
         meta      : A 2D array that contains the metadata for each trace (CoBo, AsAd, AGET, channel, pad number)
 		trace     : A 2D array that contains the every trace for the specified event.
-	'''
+	"""
 	f = h5py.File(PATH, 'r')
 	
 	events = f['/get']

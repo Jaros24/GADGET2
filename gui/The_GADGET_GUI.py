@@ -1727,7 +1727,7 @@ def RvE():
 				Max pixel_range should be 28 (7 rows for each color), so need to adjust accordingly.
 				"""
 				# Calculate the energy in MeV
-				energy_mev = GADGET2.EnergyCalibration.to_MeV(tot_energy)
+				energy_mev = GADGET2.energy_calibration.to_MeV(tot_energy)
 
 				# Calculate the proportion of the energy bar that should be filled
 				proportion_filled = energy_mev / 3
@@ -2255,7 +2255,7 @@ def RvE():
 				Max pixel_range should be 28 (7 rows for each color), so need to adjust accordingly.
 				"""
 				# Calculate the energy in MeV
-				energy_mev = GADGET2.EnergyCalibration.to_MeV(tot_energy)
+				energy_mev = GADGET2.energy_calibration.to_MeV(tot_energy)
 
 				# Calculate the proportion of the energy bar that should be filled
 				proportion_filled = energy_mev / 3
@@ -3822,7 +3822,7 @@ def track_trace(run_num):
 		Max pixel_range should be 28 (7 rows for each color), so need to adjust accordingly.
 		"""
 		# Calculate the energy in MeV
-		energy_mev = GADGET2.EnergyCalibration.to_MeV(tot_energy)
+		energy_mev = GADGET2.energy_calibration.to_MeV(tot_energy)
 
 		# Calculate the proportion of the energy bar that should be filled
 		proportion_filled = energy_mev / 3

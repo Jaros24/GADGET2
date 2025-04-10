@@ -2,3 +2,4 @@
 *egg-info*
 *.vscode*
 *.h5
+data/run*

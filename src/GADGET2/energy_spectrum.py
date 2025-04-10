@@ -6,14 +6,14 @@ import matplotlib.pyplot as plt
 import numpy as np
 import scipy.optimize as opt
 import scipy.stats as stats
-from .CurveFit import gaussian
+from .utils import gaussian
 
 def plot_1d_hist(dataset,
                  fig_name:str="Energy Spectrum",
                  units:str="Integrated Charge (adc counts)",
                  num_bins:int=20,
                  vlines:list=None):
-    '''
+    """
     Shows a 1d histogram of the dataset.
     
     Methods calling this function should call plt.show() after this function call,
@@ -37,7 +37,7 @@ def plot_1d_hist(dataset,
         A tuple of x-coordinates where vertical lines should be drawn.
         Default is None.
         Useful for marking cuts or peaks.
-    '''
+    """
     num_bins = int(num_bins)
     #plt.figure(fig_name, clear=True)
     plt.xlabel(f'{units}', fontdict = {'fontsize' : 20})
@@ -54,13 +54,13 @@ def show_cut(dataset,
                  fig_name:str="Energy Spectrum",
                  units:str="Integrated Charge (adc counts)",
                  num_bins:int=20) -> int:
-    '''
+    """
     Shows a 1d histogram of the dataset with vertical lines at the specified cut values.
     Titles the plot with the number of counts in the cut range.
     Wrapper for the plot_1d_hist function.
     
     Returns the number of counts in the cut range.
-    '''
+    """
     # Show basic plot
     plot_1d_hist(dataset, fig_name, units, num_bins, vlines)
     # Get number of counts in range, order of vlines doesn't matter
@@ -76,10 +76,10 @@ def plot_spectrum(dataset,
                  units:str="Integrated Charge (adc counts)",
                  num_bins:int=20,
                  vlines:list=None):
-    '''
+    """
     Displays a 1D histogram of the dataset.
     Wrapper for the plot_1d_hist function.
-    '''
+    """
     plot_1d_hist(dataset, fig_name, units, num_bins, vlines)
     plt.show()
 
@@ -87,11 +87,11 @@ def quick_fit_gaussian(dataset,
                  units:str="Integrated Charge (adc counts)",
                  num_bins:int=20,
                  vlines:list=None):
-    '''
+    """
     Fits a Gaussian to the histogram of the dataset.
     Displays the histogram with the fit and the residuals.
     Wrapper for the plot_1d_hist function.
-    '''
+    """
     
     if vlines is None:
         low_cut_value = np.min(dataset)
@@ -136,13 +136,13 @@ def quick_fit_gaussian(dataset,
     plt.show()
 
 def multi_fit_init_guess(self):
-    '''Not Implemented From GitLab Yet'''
+    """Not Implemented From GitLab Yet"""
     raise NotImplementedError("multi_fit_init_guess is not implemented")
 
 def fit_multi_peaks(self, num_bins, x_hist, y_hist):
-    '''Not Implemented From GitLab Yet'''
+    """Not Implemented From GitLab Yet"""
     raise NotImplementedError("fit_multi_peaks is not implemented")
 
 def multi_fit_from_params(self):
-    '''Not Implemented From GitLab Yet'''
+    """Not Implemented From GitLab Yet"""
     raise NotImplementedError("multi_fit_from_params is not implemented")

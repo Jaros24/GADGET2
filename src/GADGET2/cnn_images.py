@@ -3,7 +3,7 @@ import h5py
 import matplotlib.pyplot as plt
 import tqdm
 from scipy.signal import savgol_filter
-from .EnergyCalibration import to_MeV
+from .energy_calibration import to_MeV
 import math
 import os
 import random
@@ -277,10 +277,10 @@ def pt_shift(xset, yset): #TODO: is this a faithful representations?
     return xset, yset
 
 def make_image(self, index, use_raw_data = False ,save_path=None, show=False, smoothen=False):
-    '''
+    """
     Make datafused image of event at "index". Image will be saved to "save_path"
     if not None. 
-    '''
+    """
     
     if use_raw_data:
         VETO_PADS = (253, 254, 508, 509, 763, 764, 1018, 1019)

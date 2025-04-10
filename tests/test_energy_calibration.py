@@ -1,5 +1,5 @@
 import unittest
-from GADGET2.EnergyCalibration import to_MeV, to_counts
+from GADGET2.energy_calibration import to_MeV, to_counts
 import numpy as np
 
 class TestEnergyCalibration(unittest.TestCase):

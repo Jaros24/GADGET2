@@ -2,7 +2,8 @@
 This script generates the files needed for the GADGET GUI from the h5 files.
 """
 
-import os, sys
+import os
+import sys
 import h5py
 import numpy as np
 import math
@@ -12,28 +13,33 @@ import pandas as pd
 from sklearn.cluster import DBSCAN
 from sklearn.decomposition import PCA
 import skspatial.objects
-from .ImagesCNN import remove_noise, smooth_trace
-from .RunH5 import run_num_to_str, get_default_path
-import time
+
+from .cnn_images import remove_noise, smooth_trace
+from .run_h5 import run_num_to_str, get_default_path
+from .utils import vprint
 
 
-
-def generate_files(run_num, length=80, ic=800000, pads=21, eps=7, samps=8, poly=2, overwrite=False, verbose=False):
+def generate_files(run_num:int, length=80, ic=800000, pads=21, eps=7, samps=8, poly=2, overwrite=False, verbose=False):
+    """
+    Generates the files needed for the GADGET GUI from the h5 files.
     
-    def vprint(msg, verbose=verbose):
-        """
-        Print message if verbose is True
-        """
-        if verbose:
-            print(msg)
-            time.sleep(0.1)
-            
+    Parameters
+    - run_num: Run number of the h5 file to be processed.
+    - length: Maximum length of the track in mm.
+    - ic: Maximum energy in ADC counts.
+    - pads: Minimum number of pads hit.
+    - eps: Maximum distance between two points to be considered in the same cluster.
+    - samps: Minimum number of samples in a cluster.
+    - poly: Degree of the polynomial used to fit the trace.
+    overwrite: whether to overwrite existing files.
+    verbose: for debugging purposes, prints more information.
+    """
     run_num = run_num_to_str(run_num)
-    vprint(f"run_num: {run_num}")
+    vprint(f"run_num: {run_num}", verbose)
     #check if files already exist
     mypath = get_default_path(run_num)
     sub_mypath = mypath + f'/len{length}_ic{ic}_pads{pads}_eps{eps}_samps{samps}_poly{poly}'
-    vprint(f"mypath: {mypath}")
+    vprint(f"mypath: {mypath}", verbose)
     if os.path.isdir(mypath):
         if os.path.isdir(sub_mypath):
             # Give option to overwrite or cancel
@@ -51,7 +57,7 @@ def generate_files(run_num, length=80, ic=800000, pads=21, eps=7, samps=8, poly=
         os.makedirs(mypath)
         os.makedirs(sub_mypath)
     
-    vprint(f"sub_mypath: {sub_mypath}")
+    vprint(f"sub_mypath: {sub_mypath}", verbose)
     
     class HiddenPrints:
         def __enter__(self):
@@ -134,7 +140,7 @@ def generate_files(run_num, length=80, ic=800000, pads=21, eps=7, samps=8, poly=
         # Apply the scale factor to the track length
         # track_len = scale_factor * calibration_factor * 2.35 * principalDf.std()[0]
         track_len = calibration_factor * 2.35 * principalDf.std()[0]
-        vprint(f"track_len: {track_len}")
+        vprint(f"track_len: {track_len}", verbose)
 
         if track_len > length:
             veto_on_length = True
@@ -152,13 +158,13 @@ def generate_files(run_num, length=80, ic=800000, pads=21, eps=7, samps=8, poly=
                    yset[:, np.newaxis], 
                    zset[:, np.newaxis]), 
                    axis=1)
-        vprint(f"data shape: {data.shape}")
-        vprint(f"data: {data}")
+        vprint(f"data shape: {data.shape}", verbose)
+        vprint(f"data: {data}", verbose)
 
         # Fit regression line
         # TODO: THIS LINE FITTING IS NOT WORKING
         line_fit = skspatial.objects.Line.best_fit(data)
-        vprint(f"line_fit: {line_fit}")
+        vprint(f"line_fit: {line_fit}", verbose)
 
         # Find angle between the vector of the fit line and a vector normal to the xy-plane (pad plane)
         v = np.array([line_fit.vector]).T   # fit line vector
@@ -171,7 +177,7 @@ def generate_files(run_num, length=80, ic=800000, pads=21, eps=7, samps=8, poly=
         theta = math.acos(dot)
         track_angle_rad = (math.pi/2 - theta) 
         track_angle_deg = track_angle_rad * (180 / np.pi)
-        vprint(f"track_angle_rad: {track_angle_rad}")
+        vprint(f"track_angle_rad: {track_angle_rad}", verbose)
 
         # Angle should always be less than 90 deg
         if track_angle_deg < 0:
@@ -200,7 +206,7 @@ def generate_files(run_num, length=80, ic=800000, pads=21, eps=7, samps=8, poly=
         """
         # Converts h5 files into ndarrays, and output each event dataset as a separte list
         num_events = int(h5file['meta/meta'][2])
-        vprint(f"num_events: {num_events}")
+        vprint(f"num_events: {num_events}", verbose)
 
         len_list = []
         good_events = []
@@ -225,13 +231,13 @@ def generate_files(run_num, length=80, ic=800000, pads=21, eps=7, samps=8, poly=
         for i in tqdm.trange(1, num_events+1):
             # Make copy of cloud datasets
             str_cloud = f"evt{i}_cloud"
-            vprint(f"str_cloud: {str_cloud}")
+            vprint(f"str_cloud: {str_cloud}", verbose)
             try:
                 cloud = h5file[f'clouds/{str_cloud}']
                 cloud = np.array(cloud)
-                vprint(f"cloud shape: {cloud.shape}")
+                vprint(f"cloud shape: {cloud.shape}", verbose)
             except:
-                vprint(f"cloud not found for event {i}")
+                vprint(f"cloud not found for event {i}", verbose)
                 cloud_missing += 1
                 continue
             
@@ -243,20 +249,20 @@ def generate_files(run_num, length=80, ic=800000, pads=21, eps=7, samps=8, poly=
             #cloud_z = cloud[:,2] - np.min(cloud[:, 2])
             cloud_e = cloud[:,3]
             del cloud
-            vprint(f"cloud x: {cloud_x.shape}")
-            vprint(f"cloud y: {cloud_y.shape}")
-            vprint(f"cloud z: {cloud_z.shape}")
-            vprint(f"cloud e: {cloud_e.shape}")
+            vprint(f"cloud x: {cloud_x.shape}", verbose)
+            vprint(f"cloud y: {cloud_y.shape}", verbose)
+            vprint(f"cloud z: {cloud_z.shape}", verbose)
+            vprint(f"cloud e: {cloud_e.shape}", verbose)
             
             # Apply veto condition
             R = 36                           # Radius of the pad plane
             r = np.sqrt(cloud_x**2 + cloud_y**2)
             statements = np.greater(r, R)    # Check if any point lies outside of R
-            vprint(f"max r: {np.max(r)}")
+            vprint(f"max r: {np.max(r)}", verbose)
 
             if np.any(statements) == True:
                 veto_events += 1
-                vprint(f"skipped event {i} because of veto condition")
+                vprint(f"skipped event {i} because of veto condition", verbose)
                 continue
             
             # Apply pad threshold
@@ -265,11 +271,11 @@ def generate_files(run_num, length=80, ic=800000, pads=21, eps=7, samps=8, poly=
             xy_tuples = np.column_stack((x, y))
             unique_xy_tuples = set(map(tuple, xy_tuples))
             num_unique_tuples = len(unique_xy_tuples)
-            vprint(f"num_unique_tuples: {num_unique_tuples}")
+            vprint(f"num_unique_tuples: {num_unique_tuples}", verbose)
 
             if num_unique_tuples <= pads:
                 skipped_events += 1
-                vprint(f"skipped event {i} because of pad threshold")
+                vprint(f"skipped event {i} because of pad threshold", verbose)
                 continue
 
             """
@@ -283,17 +289,17 @@ def generate_files(run_num, length=80, ic=800000, pads=21, eps=7, samps=8, poly=
             # Move track next to pad plane for 3D view and scale by appropriate factor
             zscale = 1.45 # Have also used 1.92
             cloud_z = (cloud_z  - np.min(cloud_z))*zscale
-            vprint(f"cloud_z rescaled: {cloud_z.shape}")
+            vprint(f"cloud_z rescaled: {cloud_z.shape}", verbose)
             #cloud_z = (cloud_z  - np.min(cloud_z ))
 
             # Call track_len() to create lists of all track lengths
             length, veto_on_length, angle = track_len(cloud_x, cloud_y, cloud_z)
-            vprint(f"length: {length}")
-            vprint(f"veto_on_length: {veto_on_length}")
-            vprint(f"angle: {angle}")
+            vprint(f"length: {length}", verbose)
+            vprint(f"veto_on_length: {veto_on_length}", verbose)
+            vprint(f"angle: {angle}", verbose)
             if veto_on_length == True:
                 veto_events += 1
-                vprint(f"skipped event {i} because of length threshold")
+                vprint(f"skipped event {i} because of length threshold", verbose)
                 continue 
 
             str_trace = f"evt{i}_data"
@@ -313,7 +319,7 @@ def generate_files(run_num, length=80, ic=800000, pads=21, eps=7, samps=8, poly=
                 upper_bound = 506
             trace = trace[low_bound:upper_bound]
             
-            '''
+            """
             # Smooth trace
             trace = smooth_trace(trace)
 
@@ -324,14 +330,14 @@ def generate_files(run_num, length=80, ic=800000, pads=21, eps=7, samps=8, poly=
 
             # Remove noise, negative values, and zero consecutive bins
             trace = remove_noise(trace, threshold_ratio=0.01)
-            '''
+            """
 
             # Here you can apply the scale factor to the total energy
             scaled_energy = np.sum(trace)
 
             if scaled_energy > ic:
                 veto_events += 1
-                vprint(f"skipped event {i} because of energy threshold")
+                vprint(f"skipped event {i} because of energy threshold", verbose)
                 continue
 
             """
@@ -369,7 +375,7 @@ def generate_files(run_num, length=80, ic=800000, pads=21, eps=7, samps=8, poly=
 
     str_file = f"{get_default_path(run_num)}.h5"
     f = h5py.File(str_file, 'r')
-    vprint(f"opened file {str_file}")
+    vprint(f"opened file {str_file}", verbose)
     (tot_energy, skipped_events, veto_events, good_events, len_list, trace_list, xHit_list, yHit_list, zHit_list, eHit_list, angle_list) = main(h5file=f, pads=pads, ic=ic)
 
     # Save Arrays
@@ -420,6 +426,3 @@ def generate_files(run_num, length=80, ic=800000, pads=21, eps=7, samps=8, poly=
     del zHit_list
     del eHit_list
     del angle_list
-
-#if __name__ == "__main__":
-#    generate_files(139)

@@ -1,6 +1,6 @@
 import unittest
 import numpy as np
-from GADGET2.EnergySpectrum import plot_1d_hist, show_cut, plot_spectrum, quick_fit_gaussian
+from GADGET2.energy_spectrum import plot_1d_hist, show_cut, plot_spectrum, quick_fit_gaussian
 
 import matplotlib.pyplot as plt
 np.random.seed(1)  # For reproducibility
