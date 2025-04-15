@@ -29,10 +29,20 @@ def get_default_path(run_id):
     return f'{get_h5_path()}run_{run_str}'
 
 class GadgetRunH5:
-    def __init__(self, run_num, folder_path):
+    def __init__(self, run_num, folder_path=None):
         self.run_num = run_num
+        
+        if folder_path is None: # if no folder path is provided, use the default
+            try:
+                folder_path = get_default_path(run_num)
+                subdirs = os.listdir(folder_path)
+                for subdir in subdirs:
+                    if 'tot_energy.npy' in os.listdir(os.path.join(folder_path, subdir)):
+                        folder_path = os.path.join(folder_path, subdir)
+            except:
+                raise ValueError(f"Could not locate run {run_num} files using default path.")
         self.folder_path = folder_path
-
+        
         #energy in adc counts
         self.total_energy = np.load(os.path.join(folder_path, 'tot_energy.npy'), allow_pickle=True)
         #
@@ -49,7 +59,7 @@ class GadgetRunH5:
         self.angle_list = np.load(os.path.join(folder_path, 'angle_list.npy'), allow_pickle=True)
         self.file_path = get_h5_path() + (f'run_{run_num_to_str(run_num)}.h5')
     
-        self.h5_file = raw_h5_file(self.file_path, flat_lookup_csv=f'{__file__[:-8]}/data/flatlookup4cobos.csv')
+        self.h5_file = raw_h5_file(self.file_path, flat_lookup_csv=f'{__file__[:-9]}/data/flatlookup4cobos.csv')
         self.h5_file.background_subtract_mode='fixed window'
         self.h5_file.data_select_mode='near peak'
         self.h5_file.remove_outliers=True

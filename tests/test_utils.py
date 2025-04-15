@@ -1,6 +1,7 @@
 import unittest
 import numpy as np
-from GADGET2.utils import gaussian, vprint
+import sys
+from GADGET2.utils import gaussian, HiddenPrints
 
 class TestGaussianFunction(unittest.TestCase):
     def test_gaussian_peak(self):
@@ -42,15 +43,20 @@ class TestGaussianFunction(unittest.TestCase):
         result2 = gaussian(x, amplitude, mu, abs(sigma))
         self.assertAlmostEqual(result1, result2, places=6)
 
-class TestVPrint(unittest.TestCase):
-    def test_verbose(self):
-        verbose = False
-        message = 'Testing'
-        
-        self.assertNoLogs(vprint(message, verbose))
-        
-        verbose = True
-        self.assertLogs(vprint(message, verbose))
+
+class TestHiddenPrints(unittest.TestCase):
+    def test_hidden_prints(self):
+        # Test if the context manager suppresses print statements
+        with HiddenPrints():
+            print("This should not be printed")
+        # If no error is raised, the test passes
+
+    def test_hidden_prints_output(self):
+        # Test if the context manager restores stdout
+        original_stdout = sys.stdout
+        with HiddenPrints():
+            pass
+        self.assertEqual(sys.stdout, original_stdout)
 
 if __name__ == '__main__':
     unittest.main()

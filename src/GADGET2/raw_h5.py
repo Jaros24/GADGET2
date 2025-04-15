@@ -26,12 +26,12 @@ class raw_h5_file:
     def __init__(self, file_path, zscale = 400./512, flat_lookup_csv=None):
         self.file_path = file_path
         self.h5_file = h5py.File(file_path, 'r')
-        self.padxy = np.loadtxt(f'{__file__[:-8]}data/padxy.txt', delimiter=',')
+        self.padxy = np.loadtxt(f'{__file__[:-9]}/data/padxy.txt', delimiter=',')
         
         self.flat_lookup_file_path = flat_lookup_csv        
         self.flat_lookup = np.loadtxt(self.flat_lookup_file_path, delimiter=',', dtype=int)
         
-        self.pad_plane = np.genfromtxt(f'{__file__[:-8]}data/PadPlane.csv',delimiter=',', filling_values=-1) #used for mapping pad numbers to a 2D grid
+        self.pad_plane = np.genfromtxt(f'{__file__[:-9]}/data/PadPlane.csv',delimiter=',', filling_values=-1) #used for mapping pad numbers to a 2D grid
         self.pad_to_xy_index = {} #maps pad number to (x_index,y_index)
         for y in range(len(self.pad_plane)):
             for x in range(len(self.pad_plane[0])):
