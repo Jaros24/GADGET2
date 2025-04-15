@@ -44,7 +44,7 @@ def generate_files(run_num:int, length=80, ic=800000, pads=21, eps=7, samps=8, p
                 if overwrite == True:
                     print('Overwriting Existing Files')
                 else:
-                    return
+                    return sub_mypath
         else:
             os.makedirs(sub_mypath)
         
@@ -104,6 +104,8 @@ def generate_files(run_num:int, length=80, ic=800000, pads=21, eps=7, samps=8, p
     del zHit_list
     del eHit_list
     del angle_list
+    
+    return sub_path
 
 def remove_outliers(xset, yset, zset, eset, pads, eps, samps):
     """

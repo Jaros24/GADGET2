@@ -36,9 +36,13 @@ class GadgetRunH5:
             try:
                 folder_path = get_default_path(run_num)
                 subdirs = os.listdir(folder_path)
+                print(f"Located files for run {run_num}:")
+                [print(subdir) for subdir in subdirs]
                 for subdir in subdirs:
                     if 'tot_energy.npy' in os.listdir(os.path.join(folder_path, subdir)):
                         folder_path = os.path.join(folder_path, subdir)
+                        print(f"Default path chosen: {folder_path}")
+                        break
             except:
                 raise ValueError(f"Could not locate run {run_num} files using default path.")
         self.folder_path = folder_path
