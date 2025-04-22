@@ -34,7 +34,7 @@ class EnergySpectrumFrame(ttk.Frame):
         self.units_combobox.set('adc counts')
         self.units_combobox.grid(row=1, column=1)
         self.generate_spectrum_button = \
-                    ttk.Button(self.hist_settings_frame, text="Show Spectrum", command=GADGET2.energy_spectrum.plot_spectrum)
+                    ttk.Button(self.hist_settings_frame, text="Show Spectrum", command=GADGET2.plot_spectrum)
         self.generate_spectrum_button.grid(row=2, column=0, columnspan=2)
         
         self.quick_fit_frame = ttk.Labelframe(self, text='quick fit')
@@ -44,10 +44,10 @@ class EnergySpectrumFrame(ttk.Frame):
         self.low_cut_entry.grid(row=0, column=0)
         self.high_cut_entry = gadget_widgets.GEntry(self.quick_fit_frame, default_text='High Cut Value')
         self.high_cut_entry.grid(row=0, column=1)
-        self.show_cut_button = ttk.Button(self.quick_fit_frame, text='Show Cut Range', command=GADGET2.energy_spectrum.show_cut)
+        self.show_cut_button = ttk.Button(self.quick_fit_frame, text='Show Cut Range', command=GADGET2.show_cut)
         self.show_cut_button.grid(row=1, column=0, columnspan=2)
         self.quick_fit_gaus_button = ttk.Button(self.quick_fit_frame, text="Quick Gaussian Fit",
-                                command=GADGET2.energy_spectrum.quick_fit_gaussian)
+                                command=GADGET2.quick_fit_gaussian)
         self.quick_fit_gaus_button.grid(row=2, column=0, columnspan=2)
         current_row += 1
 
@@ -56,13 +56,13 @@ class EnergySpectrumFrame(ttk.Frame):
         current_row += 1
         self.multi_fit_button = ttk.Button(self.multi_peak_fit_frame,
                                  text="Initial Guesses for Multi-peak Fit",
-                                 command=GADGET2.energy_spectrum.multi_fit_init_guess)
+                                 command=GADGET2.multi_fit_init_guess)
         self.multi_fit_button.grid(row=0)
         self.multi_fit_params_entry = gadget_widgets.GEntry(self.multi_peak_fit_frame, 
                 'Paste Fit Parameters | Use * in Front of Param to Fix Value', width=42)
         self.multi_fit_params_entry.grid(row=1)
         self.multi_fit_from_params_button = ttk.Button(self.multi_peak_fit_frame, text="Multi-peak Fit from Params",
-                 command=GADGET2.energy_spectrum.multi_fit_from_params)
+                 command=GADGET2.multi_fit_from_params)
         self.multi_fit_from_params_button.grid(row=2)
 
     def get_dataset(self):
